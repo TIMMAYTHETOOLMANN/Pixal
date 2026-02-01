@@ -1,0 +1,9 @@
+openai
+anthropic
+elevenlabs
+ffmpeg-python
+whisper
+yt-dlp
+imapclient
+flask
+python-dotenv
