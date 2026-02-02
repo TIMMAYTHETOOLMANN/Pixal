@@ -28,7 +28,11 @@ class Transcriptor:
             print(f"[❌] Input file not found: {self.input_path}")
             return
 
-        result = self.model.transcribe(self.input_path)
+        try:
+            result = self.model.transcribe(self.input_path)
+        except Exception as e:
+            print(f"[❌] Transcription failed: {e}")
+            return
 
         # Sanitize and structure output
         output = []
