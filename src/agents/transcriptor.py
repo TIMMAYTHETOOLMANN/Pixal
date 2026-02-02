@@ -4,3 +4,6 @@ class Transcriptor:
 
     def watch(self):
         print("[⏱️ WATCH] Method not implemented")
+
+    def transcribe(self):
+        print("[🎙️] Transcribing video stream... (placeholder)")

@@ -4,3 +4,6 @@ class ScriptCrafter:
 
     def watch(self):
         print("[⏱️ WATCH] Method not implemented")
+
+    def craft(self):
+        print("[📝] Crafting scripts and overlays... (placeholder)")
