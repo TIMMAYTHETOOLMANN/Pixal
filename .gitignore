@@ -3,6 +3,7 @@ __pycache__/
 pycache/
 *.fcpxml
 *.mp4
-*.json
 .env
 logs/
+# Keep editspec.json for testing but exclude augmented output
+assets/meta/augmented_editspec.json

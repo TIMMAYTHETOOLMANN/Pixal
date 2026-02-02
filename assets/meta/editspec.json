@@ -1,0 +1,23 @@
+[
+  {
+    "start": 123,
+    "end": 158,
+    "title": "AI Rage Compilation 😡",
+    "captions": ["When the AI decides to go rogue", "User frustration intensifies"],
+    "overlays": ["angry_emoji.png", "fire_effect.gif"]
+  },
+  {
+    "start": 200,
+    "end": 245,
+    "title": "Epic Gaming Moments 🎮",
+    "captions": ["That clutch play though", "Pure skill"],
+    "overlays": ["controller.png", "victory_dance.gif"]
+  },
+  {
+    "start": 300,
+    "end": 350,
+    "title": "Tech Fails Compilation 💻",
+    "captions": ["Blue screen of death incoming", "Error 404: Patience not found"],
+    "overlays": ["bsod.png", "facepalm.gif"]
+  }
+]
