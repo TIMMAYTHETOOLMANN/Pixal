@@ -2,7 +2,7 @@ openai
 anthropic
 elevenlabs
 ffmpeg-python
-whisper
+openai-whisper
 yt-dlp
 imapclient
 flask
