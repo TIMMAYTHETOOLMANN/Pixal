@@ -4,6 +4,10 @@ import openai
 
 
 class ScriptCrafter:
+    # Configuration for GPT model
+    MODEL_NAME = "gpt-4-turbo"
+    TEMPERATURE = 0.7
+
     def __init__(self):
         print("[📝 INIT] ScriptCrafter armed")
         self.env = load_env()
@@ -28,18 +32,29 @@ class ScriptCrafter:
 
             try:
                 response = openai.ChatCompletion.create(
-                    model="gpt-4-turbo",
+                    model=self.MODEL_NAME,
                     messages=[{"role": "user", "content": gpt_input}],
-                    temperature=0.7
+                    temperature=self.TEMPERATURE
                 )
+            except Exception as e:
+                print(f"[❌] GPT API error for clip {clip['start']}-{clip['end']}: {e}")
+                continue
 
+            try:
                 clip_out = json.loads(response.choices[0].message["content"])
                 clip_out["start"] = clip["start"]
                 clip_out["end"] = clip["end"]
                 edits.append(clip_out)
-            except Exception as e:
-                print(f"[❌] GPT output error: {e}")
+            except json.JSONDecodeError as e:
+                print(f"[❌] Failed to parse GPT response as JSON for clip {clip['start']}-{clip['end']}: {e}")
                 continue
+            except (KeyError, IndexError) as e:
+                print(f"[❌] Unexpected GPT response structure for clip {clip['start']}-{clip['end']}: {e}")
+                continue
+
+        if not edits:
+            print("[⚠️] No edit specifications were generated from clips")
+            return
 
         with open(self.output_path, "w") as f:
             json.dump(edits, f, indent=2)
@@ -58,7 +73,8 @@ class ScriptCrafter:
             return None
 
     def extract_text_segment(self, transcript, start_time, end_time):
-        return [seg["text"] for seg in transcript if seg["start"] >= start_time and seg["end"] <= end_time]
+        # Use overlapping logic to include segments that overlap with clip boundaries
+        return [seg["text"] for seg in transcript if seg["start"] < end_time and seg["end"] > start_time]
 
     def build_prompt(self, clip_texts, reason, tags):
         joined_text = "\n".join(clip_texts)
