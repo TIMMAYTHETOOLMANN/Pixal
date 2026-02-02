@@ -4,6 +4,15 @@ import anthropic
 
 
 class ClipHunter:
+    # Configuration for clip detection
+    MIN_CLIP_DURATION = 15  # Minimum clip duration in seconds
+    MAX_CLIP_DURATION = 60  # Maximum clip duration in seconds
+    MIN_CLIPS = 5           # Minimum number of clips to extract
+    MAX_CLIPS = 10          # Maximum number of clips to extract
+    # Limit transcript segments to prevent exceeding Claude's context window
+    # ~40 segments typically fits within ~8k tokens, leaving room for metadata and response
+    MAX_TRANSCRIPT_SEGMENTS = 40
+
     def __init__(self):
         print("[🔍 INIT] ClipHunter ready")
         self.env = load_env()
@@ -83,12 +92,12 @@ class ClipHunter:
         return True
 
     def build_prompt(self, transcript, meta):
-        # Truncate transcript if needed (first 40 segments for token limit)
-        truncated_transcript = transcript[:40] if len(transcript) > 40 else transcript
+        # Truncate transcript to prevent exceeding context window
+        truncated_transcript = transcript[:self.MAX_TRANSCRIPT_SEGMENTS] if len(transcript) > self.MAX_TRANSCRIPT_SEGMENTS else transcript
 
         return f"""You are a video editor AI.
 
-Using the following metadata and transcript, extract 5–10 shortform-worthy clips that are between 15 to 60 seconds long. Format your output as a JSON list of clip objects.
+Using the following metadata and transcript, extract {self.MIN_CLIPS}–{self.MAX_CLIPS} shortform-worthy clips that are between {self.MIN_CLIP_DURATION} to {self.MAX_CLIP_DURATION} seconds long. Format your output as a JSON list of clip objects.
 
 Each object should have:
 - start (seconds as a number)
