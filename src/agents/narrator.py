@@ -4,3 +4,6 @@ class Narrator:
 
     def watch(self):
         print("[⏱️ WATCH] Method not implemented")
+
+    def speak(self):
+        print("[🗣️] Generating narration audio... (placeholder)")

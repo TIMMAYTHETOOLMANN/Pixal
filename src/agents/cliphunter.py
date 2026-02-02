@@ -4,3 +4,6 @@ class ClipHunter:
 
     def watch(self):
         print("[⏱️ WATCH] Method not implemented")
+
+    def detect(self):
+        print("[🔍] Detecting clips from transcript... (placeholder)")
