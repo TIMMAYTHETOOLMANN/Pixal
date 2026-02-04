@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import shutil
 from pathlib import Path
@@ -7,6 +8,9 @@ from datetime import datetime
 from src.utils.config import load_config
 from src.utils.doctor import doctor_check
 from src.utils.logger import get_logger
+
+# Display constants
+DESCRIPTION_PREVIEW_LENGTH = 50
 
 def cmd_doctor(args):
     cfg = load_config(args.config)
@@ -141,6 +145,126 @@ def cmd_clean(args):
 
     raise ValueError("clean target must be: outputs|meta|all")
 
+
+def _load_clips_index(log) -> list:
+    """Load the CLIPS_INDEX.json for metadata."""
+    clips_index_path = Path("outputs/capsynth/CLIPS_INDEX.json")
+    if not clips_index_path.exists():
+        log.warning("CLIPS_INDEX.json not found; metadata will be incomplete")
+        return []
+    try:
+        with open(clips_index_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except json.JSONDecodeError as e:
+        log.warning(f"Failed to parse CLIPS_INDEX.json: {e}")
+        return []
+
+
+def _derive_upload_metadata(clip_info: dict, clip_path: Path) -> dict:
+    """Derive YouTube upload metadata from clip info."""
+    # Import the constant to maintain single source of truth
+    from src.agents.upload_validator import MAX_TITLE_LENGTH
+    
+    title = clip_info.get("title") or f"Short: {clip_path.stem}"
+    # Truncate title if too long for YouTube
+    if len(title) > MAX_TITLE_LENGTH:
+        title = title[:MAX_TITLE_LENGTH - 3] + "..."
+
+    description = []
+    if clip_info.get("title"):
+        description.append(clip_info["title"])
+
+    # Add timing info
+    start = clip_info.get("start")
+    end = clip_info.get("end")
+    if start is not None and end is not None:
+        duration = end - start
+        description.append(f"Duration: {duration:.1f}s")
+
+    return {
+        "title": title,
+        "description": "\n".join(description) if description else "Pixal Short",
+        "tags": ["shorts", "gaming", "highlights"],
+        "visibility": "private",  # Default to private for safety
+    }
+
+
+def cmd_post(args):
+    """Post command handler - validates and optionally uploads shorts."""
+    cfg = load_config(args.config)
+    log = get_logger("pixal", cfg["runtime"]["log_file"])
+
+    platform = args.platform.lower()
+    if platform != "youtube":
+        log.error(f"Unsupported platform: {platform}. Currently only 'youtube' is supported.")
+        return 1
+
+    # Always run validation first
+    from src.agents.upload_validator import UploadValidator
+
+    validator = UploadValidator()
+    report = validator.validate_all()
+    validator.print_summary(report)
+
+    if not report.valid:
+        log.error("❌ Validation FAILED. Fix errors before posting.")
+        log.error("Run 'pixalctl post youtube --dry-run' to see full validation report.")
+        return 1
+
+    if args.dry_run:
+        log.info("🔍 DRY-RUN MODE: Showing what would be uploaded (no actual upload)")
+        log.info("")
+        log.info("=" * 60)
+        log.info("UPLOAD PREVIEW")
+        log.info("=" * 60)
+
+        # Load metadata
+        clips_index = _load_clips_index(log)
+        clips_by_id = {item["clip_id"]: item for item in clips_index}
+
+        shorts_dir = Path("outputs/shorts")
+        mp4_files = sorted(shorts_dir.glob("*.mp4"))
+
+        # Apply limit if specified
+        if args.limit and args.limit > 0:
+            mp4_files = mp4_files[:args.limit]
+            log.info(f"(Limited to {args.limit} clips)")
+
+        for idx, mp4_path in enumerate(mp4_files, start=1):
+            clip_id = mp4_path.stem
+            clip_info = clips_by_id.get(clip_id, {})
+            upload_meta = _derive_upload_metadata(clip_info, mp4_path)
+
+            # Override visibility if specified
+            if args.visibility:
+                upload_meta["visibility"] = args.visibility
+
+            file_size_mb = mp4_path.stat().st_size / (1024 * 1024)
+
+            log.info("")
+            log.info(f"📹 [{idx}] {mp4_path.name}")
+            log.info(f"    Title:       {upload_meta['title']}")
+            log.info(f"    Description: {upload_meta['description'][:DESCRIPTION_PREVIEW_LENGTH]}...")
+            log.info(f"    Visibility:  {upload_meta['visibility']}")
+            log.info(f"    File size:   {file_size_mb:.2f} MB")
+            log.info(f"    Tags:        {', '.join(upload_meta['tags'])}")
+
+        log.info("")
+        log.info("=" * 60)
+        log.info(f"✅ DRY-RUN COMPLETE: {len(mp4_files)} clip(s) ready for upload")
+        log.info("=" * 60)
+        log.info("")
+        log.info("To actually upload, run without --dry-run:")
+        log.info("    pixalctl post youtube")
+        log.info("")
+        return 0
+
+    # Actual upload would go here (Phase XI-C)
+    log.error("❌ Live posting not yet implemented (Phase XI-C)")
+    log.error("Use --dry-run to validate and preview uploads")
+    return 1
+
+
 def main():
     ap = argparse.ArgumentParser(prog="pixalctl", description="Pixal Operator CLI")
     ap.add_argument("--config", default="pixal.yaml", help="Config file path (default pixal.yaml)")
@@ -165,6 +289,13 @@ def main():
     p_clean = sub.add_parser("clean", help="Clean generated artifacts")
     p_clean.add_argument("target", help="outputs|meta|all")
     p_clean.set_defaults(func=cmd_clean)
+
+    p_post = sub.add_parser("post", help="Validate and post shorts to platforms")
+    p_post.add_argument("platform", help="Target platform (youtube)")
+    p_post.add_argument("--dry-run", action="store_true", help="Validate and preview without uploading")
+    p_post.add_argument("--limit", type=int, help="Limit number of clips to upload")
+    p_post.add_argument("--visibility", choices=["public", "unlisted", "private"], help="Video visibility")
+    p_post.set_defaults(func=cmd_post)
 
     args = ap.parse_args()
     return args.func(args)
