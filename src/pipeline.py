@@ -53,7 +53,7 @@ def run_all(vod_url: str = None, file_path: str = None, config_path: str = "pixa
     cfg = load_config(config_path)
     log = get_logger("pixal", cfg["runtime"]["log_file"])
 
-    run_id = _run_id() if str(cfg["runtime"]["enable_run_ids"]).lower() != "false" else "default"
+    run_id = _run_id() if cfg["runtime"]["enable_run_ids"] else "default"
     run_paths = _prepare_run_dirs(cfg, run_id)
 
     log.info(f"Pixal run start: run_id={run_id}")

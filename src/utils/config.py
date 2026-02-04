@@ -4,9 +4,11 @@ from pathlib import Path
 DEFAULT_CONFIG_PATH = "pixal.yaml"
 
 def load_config(path: str = DEFAULT_CONFIG_PATH) -> dict:
-    # Minimal YAML reader without dependencies:
-    # Supports the subset we use (key: value, nested via indentation).
-    # If you want full YAML later, we can add PyYAML, but v1 keeps deps minimal.
+    """Minimal YAML reader without dependencies.
+    
+    Supports the subset we use (key: value, nested via indentation, simple lists).
+    If you want full YAML later, we can add PyYAML, but v1 keeps deps minimal.
+    """
     if not os.path.exists(path):
         raise FileNotFoundError(f"Missing config file: {path}")
 
@@ -16,28 +18,34 @@ def load_config(path: str = DEFAULT_CONFIG_PATH) -> dict:
     with open(path, "r", encoding="utf-8") as f:
         for raw in f.readlines():
             line = raw.rstrip("\n")
-            if not line.strip() or line.strip().startswith("#"):
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
                 continue
 
             indent = len(line) - len(line.lstrip(" "))
-            key_val = line.strip().split(":", 1)
-            key = key_val[0].strip()
-            val = key_val[1].strip() if len(key_val) > 1 else ""
 
             # Determine current container based on indentation
             while stack and indent < stack[-1][0]:
                 stack.pop()
             container = stack[-1][1]
 
-            # List item
-            if key.startswith("- "):
-                item = key[2:].strip()
+            # List item detection - check before colon split
+            if stripped.startswith("- "):
+                item = stripped[2:].strip()
                 container.setdefault("__list__", []).append(item)
                 continue
 
+            # Must have a colon for key: value or key: (nested dict)
+            if ":" not in stripped:
+                continue  # Skip invalid lines without colons
+
+            key_val = stripped.split(":", 1)
+            key = key_val[0].strip()
+            val = key_val[1].strip() if len(key_val) > 1 else ""
+
             # value normalization
             if val == "":
-                # nested dict
+                # nested dict (line ends with colon only)
                 container[key] = {}
                 stack.append((indent + 2, container[key]))
             else:

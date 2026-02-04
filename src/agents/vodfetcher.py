@@ -17,6 +17,11 @@ class VODFetcher:
             
         Returns:
             bool: True if download succeeded, False otherwise
+            
+        Note:
+            Prefers mp4 format when available. If mp4 is not available, 
+            yt-dlp will download the best available format and may 
+            convert/remux it to the output path specified.
         """
         try:
             import yt_dlp

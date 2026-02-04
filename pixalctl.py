@@ -102,34 +102,41 @@ def cmd_status(args):
         log.info("Runs directory missing (will be created on first run).")
     return 0
 
+def _clean_outputs(cfg: dict, log):
+    """Clean outputs directories."""
+    for p in ["outputs/shorts", "outputs/capsynth", cfg["outputs"]["runs_dir"]]:
+        if Path(p).exists():
+            shutil.rmtree(p)
+            log.info(f"Deleted: {p}")
+
+def _clean_meta(log):
+    """Clean assets/meta directory."""
+    meta = Path("assets/meta")
+    if meta.exists():
+        # Keep sample editspec if desired; for now wipe all JSON except .gitkeep
+        for p in meta.glob("*"):
+            if p.name == ".gitkeep":
+                continue
+            if p.is_file():
+                p.unlink()
+        log.info("Cleared assets/meta (files only).")
+
 def cmd_clean(args):
     cfg = load_config(args.config)
     log = get_logger("pixal", cfg["runtime"]["log_file"])
 
     target = args.target.lower()
     if target == "outputs":
-        for p in ["outputs/shorts", "outputs/capsynth", cfg["outputs"]["runs_dir"]]:
-            if Path(p).exists():
-                shutil.rmtree(p)
-                log.info(f"Deleted: {p}")
+        _clean_outputs(cfg, log)
         return 0
 
     if target == "meta":
-        meta = Path("assets/meta")
-        if meta.exists():
-            # Keep sample editspec if desired; for now wipe all JSON except .gitkeep
-            for p in meta.glob("*"):
-                if p.name == ".gitkeep":
-                    continue
-                if p.is_file():
-                    p.unlink()
-            log.info("Cleared assets/meta (files only).")
+        _clean_meta(log)
         return 0
 
     if target == "all":
-        # outputs + meta
-        cmd_clean(argparse.Namespace(config=args.config, target="outputs"))
-        cmd_clean(argparse.Namespace(config=args.config, target="meta"))
+        _clean_outputs(cfg, log)
+        _clean_meta(log)
         return 0
 
     raise ValueError("clean target must be: outputs|meta|all")
