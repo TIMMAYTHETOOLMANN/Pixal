@@ -1,38 +1,12 @@
-from src.utils.sanity_check import verify_env, verify_binary_dependencies
+from src.pipeline import run_all
 
 def run_pipeline():
-    print("[🔁] Pixal Pipeline Launching...")
-
-    if not verify_env() or not verify_binary_dependencies():
-        print("[ABORT] System is not properly configured. Fix configuration and retry.")
-        return
-
-    # Import agents after sanity checks pass
-    from src.agents.transcriptor import Transcriptor
-    from src.agents.cliphunter import ClipHunter
-    from src.agents.scriptcrafter import ScriptCrafter
-    from src.agents.templateforge import TemplateForge
-    from src.agents.timeline_builder import TimelineBuilder
-    from src.agents.renderforge import RenderForge
-    from src.agents.capsynth import CapSynth
-
-    t = Transcriptor()
-    c = ClipHunter()
-    s = ScriptCrafter()
-    f = TemplateForge()
-    x = TimelineBuilder()
-    r = RenderForge()
-    cap = CapSynth()
-
-    t.transcribe()
-    c.detect()
-    s.craft()
-    f.inject()
-    x.build()
-    r.run()
-    cap.run()
-
-    print("[🏁] Pixal complete. Timeline is ready for import.")
+    """Run the full Pixal pipeline.
+    
+    This function delegates to src.pipeline.run_all() which is the single
+    source of truth for pipeline orchestration.
+    """
+    return run_all()
 
 if __name__ == "__main__":
     run_pipeline()
