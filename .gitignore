@@ -4,7 +4,8 @@ pycache/
 *.fcpxml
 *.mp4
 .env
-logs/
+logs/*
+!logs/.gitkeep
 # Keep editspec.json for testing but exclude augmented output
 assets/meta/augmented_editspec.json
 # Include outputs directory structure but not rendered clips
@@ -13,3 +14,6 @@ outputs/shorts/*
 # CapSynth outputs
 outputs/capsynth/*
 !outputs/capsynth/.gitkeep
+# Run outputs
+outputs/runs/*
+!outputs/runs/.gitkeep

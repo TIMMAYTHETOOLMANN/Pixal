@@ -1,0 +1,31 @@
+version: 1
+paths:
+  input_video: stream_input.mp4
+  editspec: assets/meta/editspec.json
+  augmented_editspec: assets/meta/augmented_editspec.json
+  transcript: assets/meta/transcript.json
+  clips: assets/meta/clips.json
+  fcpxml: assets/meta/pixal_timeline.fcpxml
+
+outputs:
+  base_dir: outputs
+  runs_dir: outputs/runs
+  shorts_dir_name: shorts
+  capsynth_dir_name: capsynth
+
+runtime:
+  enable_run_ids: true
+  log_file: logs/pixal.log
+  ffmpeg_bin: ffmpeg
+  yt_dlp_required: true
+
+pipeline:
+  steps:
+    - vodfetch
+    - transcribe
+    - detect
+    - craft
+    - forge
+    - timeline
+    - render
+    - capsynth
