@@ -10,3 +10,6 @@ assets/meta/augmented_editspec.json
 # Include outputs directory structure but not rendered clips
 outputs/shorts/*
 !outputs/shorts/.gitkeep
+# CapSynth outputs
+outputs/capsynth/*
+!outputs/capsynth/.gitkeep
