@@ -7,3 +7,6 @@ pycache/
 logs/
 # Keep editspec.json for testing but exclude augmented output
 assets/meta/augmented_editspec.json
+# Include outputs directory structure but not rendered clips
+outputs/shorts/*
+!outputs/shorts/.gitkeep
