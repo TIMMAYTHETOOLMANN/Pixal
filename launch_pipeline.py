@@ -14,6 +14,7 @@ def run_pipeline():
     from src.agents.templateforge import TemplateForge
     from src.agents.timeline_builder import TimelineBuilder
     from src.agents.renderforge import RenderForge
+    from src.agents.capsynth import CapSynth
 
     t = Transcriptor()
     c = ClipHunter()
@@ -21,6 +22,7 @@ def run_pipeline():
     f = TemplateForge()
     x = TimelineBuilder()
     r = RenderForge()
+    cap = CapSynth()
 
     t.transcribe()
     c.detect()
@@ -28,6 +30,7 @@ def run_pipeline():
     f.inject()
     x.build()
     r.run()
+    cap.run()
 
     print("[🏁] Pixal complete. Timeline is ready for import.")
 
