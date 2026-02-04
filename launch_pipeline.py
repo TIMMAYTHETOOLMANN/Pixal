@@ -13,18 +13,21 @@ def run_pipeline():
     from src.agents.scriptcrafter import ScriptCrafter
     from src.agents.templateforge import TemplateForge
     from src.agents.timeline_builder import TimelineBuilder
+    from src.agents.renderforge import RenderForge
 
     t = Transcriptor()
     c = ClipHunter()
     s = ScriptCrafter()
     f = TemplateForge()
     x = TimelineBuilder()
+    r = RenderForge()
 
     t.transcribe()
     c.detect()
     s.craft()
     f.inject()
     x.build()
+    r.run()
 
     print("[🏁] Pixal complete. Timeline is ready for import.")
 
