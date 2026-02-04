@@ -9,6 +9,9 @@ from src.utils.config import load_config
 from src.utils.doctor import doctor_check
 from src.utils.logger import get_logger
 
+# Display constants
+DESCRIPTION_PREVIEW_LENGTH = 50
+
 def cmd_doctor(args):
     cfg = load_config(args.config)
     log = get_logger("pixal", cfg["runtime"]["log_file"])
@@ -159,10 +162,13 @@ def _load_clips_index(log) -> list:
 
 def _derive_upload_metadata(clip_info: dict, clip_path: Path) -> dict:
     """Derive YouTube upload metadata from clip info."""
+    # Import the constant to maintain single source of truth
+    from src.agents.upload_validator import MAX_TITLE_LENGTH
+    
     title = clip_info.get("title") or f"Short: {clip_path.stem}"
     # Truncate title if too long for YouTube
-    if len(title) > 100:
-        title = title[:97] + "..."
+    if len(title) > MAX_TITLE_LENGTH:
+        title = title[:MAX_TITLE_LENGTH - 3] + "..."
 
     description = []
     if clip_info.get("title"):
@@ -238,7 +244,7 @@ def cmd_post(args):
             log.info("")
             log.info(f"📹 [{idx}] {mp4_path.name}")
             log.info(f"    Title:       {upload_meta['title']}")
-            log.info(f"    Description: {upload_meta['description'][:50]}...")
+            log.info(f"    Description: {upload_meta['description'][:DESCRIPTION_PREVIEW_LENGTH]}...")
             log.info(f"    Visibility:  {upload_meta['visibility']}")
             log.info(f"    File size:   {file_size_mb:.2f} MB")
             log.info(f"    Tags:        {', '.join(upload_meta['tags'])}")

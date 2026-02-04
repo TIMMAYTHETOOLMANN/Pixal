@@ -19,6 +19,8 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Optional
 
+from src.utils.logger import get_logger
+
 
 # Platform constraints
 MAX_DURATION_SECONDS = 60
@@ -90,12 +92,14 @@ class UploadValidator:
         clips_index_path: str = "outputs/capsynth/CLIPS_INDEX.json",
         report_dir: str = "outputs/validation",
         ffprobe_bin: str = "ffprobe",
+        log_file: str = "logs/pixal.log",
     ):
         self.shorts_dir = Path(shorts_dir)
         self.clips_index_path = Path(clips_index_path)
         self.report_dir = Path(report_dir)
         self.ffprobe_bin = ffprobe_bin
-        print("[🔍 INIT] UploadValidator online")
+        self.log = get_logger("upload_validator", log_file)
+        self.log.info("[🔍 INIT] UploadValidator online")
 
     def validate_all(self) -> ValidationReport:
         """Validate all shorts in the output directory."""
@@ -280,26 +284,30 @@ class UploadValidator:
         report_path = self.report_dir / "report.json"
         with open(report_path, "w", encoding="utf-8") as f:
             json.dump(report.to_dict(), f, indent=2)
-        print(f"[📋] Validation report written to: {report_path}")
+        self.log.info(f"[📋] Validation report written to: {report_path}")
 
     def print_summary(self, report: ValidationReport):
         """Print human-readable summary of validation results."""
         status = "✅ PASS" if report.valid else "❌ FAIL"
-        print(f"\n{'='*60}")
-        print(f"UPLOAD VALIDATION: {status}")
-        print(f"{'='*60}")
-        print(f"Total clips: {report.clips_total}")
-        print(f"Valid:       {report.clips_valid}")
-        print(f"Invalid:     {report.clips_invalid}")
+        self.log.info("")
+        self.log.info(f"{'='*60}")
+        self.log.info(f"UPLOAD VALIDATION: {status}")
+        self.log.info(f"{'='*60}")
+        self.log.info(f"Total clips: {report.clips_total}")
+        self.log.info(f"Valid:       {report.clips_valid}")
+        self.log.info(f"Invalid:     {report.clips_invalid}")
 
         if report.errors:
-            print(f"\n🚫 ERRORS ({len(report.errors)}):")
+            self.log.info(f"")
+            self.log.info(f"🚫 ERRORS ({len(report.errors)}):")
             for err in report.errors:
-                print(f"   • {err}")
+                self.log.info(f"   • {err}")
 
         if report.warnings:
-            print(f"\n⚠️  WARNINGS ({len(report.warnings)}):")
+            self.log.info(f"")
+            self.log.info(f"⚠️  WARNINGS ({len(report.warnings)}):")
             for warn in report.warnings:
-                print(f"   • {warn}")
+                self.log.info(f"   • {warn}")
 
-        print(f"{'='*60}\n")
+        self.log.info(f"{'='*60}")
+        self.log.info("")
