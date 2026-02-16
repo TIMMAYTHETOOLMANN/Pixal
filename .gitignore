@@ -17,3 +17,6 @@ outputs/capsynth/*
 # Run outputs
 outputs/runs/*
 !outputs/runs/.gitkeep
+# Validation outputs
+outputs/validation/*
+!outputs/validation/.gitkeep
